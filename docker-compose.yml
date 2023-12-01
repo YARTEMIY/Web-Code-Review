@@ -1,0 +1,8 @@
+services:
+  parser: 
+    build: 
+      ./parser
+
+  backend:
+    build: 
+      ./backend

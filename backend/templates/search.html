@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block content %}
+    <h1>Поиск</h1>
+    <form method="post" action="/search/screwdriver">
+        <label for="min_price">Мин. цена:</label>
+        <input type="number" id="min_price" name="min_price"><br>
+        <label for="max_price">Макс. цена:</label>
+        <input type="number" id="max_price" name="max_price"><br>
+        <input type="checkbox" id="availability" name="availability" value="available">
+        <label for="availability">Наличие</label><br>
+        <input type="submit" value="Search">
+        <table>
+            <tr>
+                <th>Название</th>
+                <th>Цена</th>
+                <th>Количество</th>
+                <th>Ссылка</th>
+            </tr>
+            {% for item in data %}
+            <tr>
+                <td>{{ item[1] }}</td>
+                <td>{{ item[2] }}</td>
+                <td>{{ item[3] }}</td>
+                <td>{{ item[4] }}</td>
+            </tr>
+            {% endfor %}
+        </table>
+    </form>
+{% endblock %}
