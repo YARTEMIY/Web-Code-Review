@@ -27,10 +27,12 @@ def get_product_instrumentorugie(page):
             price = price.replace(' ', '')
 
         amount = i.find('span', {'class' : 'value'}).text.strip()
-        
-        all_goods.append((title, price, amount))
 
-        add_goods(title, price, amount)
+        link = f'https://instrument-orugie.ru/catalog/?q={title}&s=Найти'
+        
+        all_goods.append((title, price, amount, link))
+
+        add_goods(title, price, amount, link)
 
     return all_goods
 
@@ -69,9 +71,11 @@ def get_product_vseinstrumenti(page):
             amount = amount.replace('\n', '')
             amount = amount.replace('    ', ' ')
         
-        all_goods.append((title, price, amount))
+        link = f'https://instrument-orugie.ru/catalog/?q={title}&s=Найти'
+        
+        all_goods.append((title, price, amount, link))
 
-        add_goods(title, price, amount)
+        add_goods(title, price, amount, link)
 
     return all_goods
 
@@ -92,12 +96,12 @@ def create_tables(cur, conn):
     conn.commit()
 
 
-def add_goods(title, price, amount):
+def add_goods(title, price, amount, link):
     conn = sqlite3.connect('sqldb.db')
 
     cur = conn.cursor()
-    cur.execute(f'''INSERT INTO goods (title, price, amount) VALUES 
-                ('{title}', '{price}', '{amount}')''')
+    cur.execute(f'''INSERT INTO goods (title, price, amount, link) VALUES 
+                ('{title}', '{price}', '{amount}', '{link}')''')
     
     conn.commit()
     conn.close()
