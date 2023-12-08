@@ -1,6 +1,6 @@
 FROM python:3.8
 
-WORKDIR /usr/src/parser
+WORKDIR /usr/src/bd
 
 COPY . .
 

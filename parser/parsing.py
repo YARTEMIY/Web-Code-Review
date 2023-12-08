@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 from selenium import webdriver
 import sqlite3
+import os
 
 
 def get_product_instrumentorugie(page):
@@ -71,7 +72,7 @@ def get_product_vseinstrumenti(page):
             amount = amount.replace('\n', '')
             amount = amount.replace('    ', ' ')
         
-        link = f'https://instrument-orugie.ru/catalog/?q={title}&s=Найти'
+        link = f'https://www.vseinstrumenti.ru/search/?what={title}'
         
         all_goods.append((title, price, amount, link))
 
@@ -97,7 +98,7 @@ def create_tables(cur, conn):
 
 
 def add_goods(title, price, amount, link):
-    conn = sqlite3.connect('sqldb.db')
+    conn = sqlite3.connect(f"{os.path.abspath("bd/sqldb.db")}")
 
     cur = conn.cursor()
     cur.execute(f'''INSERT INTO goods (title, price, amount, link) VALUES 
@@ -110,7 +111,6 @@ def add_goods(title, price, amount, link):
 def parsing():
     page = 1
 
-    #for instrumentorugie
     break_point = get_product_instrumentorugie(page)
     while True:
         page += 1
@@ -119,7 +119,6 @@ def parsing():
             page = 1
             break
 
-    #for vseinstrumenti
     break_point = get_product_vseinstrumenti(page)
     while True:
         page += 1
@@ -128,7 +127,7 @@ def parsing():
             break
 
 
-with sqlite3.connect('sqldb.db') as conn:
+with sqlite3.connect(f"{os.path.abspath("bd/sqldb.db")}") as conn:
     cur = conn.cursor()
     create_tables(cur, conn)
 

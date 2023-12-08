@@ -1,12 +1,13 @@
 from flask import Flask, render_template, request
 import sqlite3
+import os
 
 
 app = Flask(__name__)
 
 
 def connect_db():
-    conn = sqlite3.connect('sqldb.db')
+    conn = sqlite3.connect(f"{os.path.abspath('bd/sqldb.db')}")
     return conn
 
 
