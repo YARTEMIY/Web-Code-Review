@@ -2,6 +2,21 @@ from bs4 import BeautifulSoup
 from selenium import webdriver
 import sqlite3
 import os
+import fuzzywuzzy
+
+
+model = {0: 'insert your text'}
+
+
+def get_model_name(title):
+    list = title.split()[2:]
+    model = ' '.join(list).lower()
+    return model
+
+
+def add_model_item(name):
+    if name not in model.values():
+        model[max(model.keys()) + 1] = name
 
 
 def get_product_instrumentorugie(page):
@@ -11,10 +26,10 @@ def get_product_instrumentorugie(page):
     html = driver.execute_script('return document.body.innerHTML')
     driver.close()
 
+    all_goods = []
+
     bsObj = BeautifulSoup(html, 'html.parser')
     found_goods = bsObj.find_all('div', {'class' : 'catalog_item_wrapp item'})
-
-    all_goods = []
 
     for i in found_goods:
         title = i.find('div', {'class' : 'item-title'}).text.strip()
@@ -30,10 +45,14 @@ def get_product_instrumentorugie(page):
         amount = i.find('span', {'class' : 'value'}).text.strip()
 
         link = f'https://instrument-orugie.ru/catalog/?q={title}&s=Найти'
+
+        model_name = get_model_name(title)
+
+        add_model_item(model_name)
         
         all_goods.append((title, price, amount, link))
 
-        add_goods(title, price, amount, link)
+        add_goods(title, price, amount, link, model_name)
 
     return all_goods
 
@@ -45,10 +64,10 @@ def get_product_vseinstrumenti(page):
     html = driver.execute_script('return document.body.innerHTML')
     driver.close()
 
+    all_goods = []
+
     bsObj = BeautifulSoup(html, 'html.parser')
     found_goods = bsObj.find_all('div', {'class' : 'dGMJLz fSNq2j Ppy5qY LXySrk'})
-
-    all_goods = []
 
     for i in found_goods:
         title = i.find('span', {'class' : 'typography text v2 -no-margin'}).text.strip()
@@ -71,12 +90,22 @@ def get_product_vseinstrumenti(page):
             amount = i.find('p', {'class' : 'SyU0Xg'}).text.strip()
             amount = amount.replace('\n', '')
             amount = amount.replace('    ', ' ')
-        
+
         link = f'https://www.vseinstrumenti.ru/search/?what={title}'
+
+        flag = True
+        for name in model.values():
+            if title.lower().find(name) != -1:
+                model_name = name
+                flag = False
+                break
+        if flag:
+            add_model_item(title.lower())
+            model_name = model[max(model.keys())]
         
         all_goods.append((title, price, amount, link))
 
-        add_goods(title, price, amount, link)
+        add_goods(title, price, amount, link, model_name)
 
     return all_goods
 
@@ -90,19 +119,20 @@ def create_tables(cur, conn):
         title TEXT,
         price INTEGER,
         amount TEXT,
-        link TEXT
+        link TEXT,
+        model_name TEXT
     )
     ''')
     
     conn.commit()
 
 
-def add_goods(title, price, amount, link):
+def add_goods(title, price, amount, link, model_name):
     conn = sqlite3.connect(f"{os.path.abspath("bd/sqldb.db")}")
 
     cur = conn.cursor()
-    cur.execute(f'''INSERT INTO goods (title, price, amount, link) VALUES 
-                ('{title}', '{price}', '{amount}', '{link}')''')
+    cur.execute(f'''INSERT INTO goods (title, price, amount, link, model_name) VALUES 
+                ('{title}', '{price}', '{amount}', '{link}', '{model_name}')''')
     
     conn.commit()
     conn.close()
@@ -124,6 +154,7 @@ def parsing():
         page += 1
         all_goods = get_product_vseinstrumenti(page)
         if all_goods == break_point:
+            page = 1
             break
 
 

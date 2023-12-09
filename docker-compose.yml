@@ -8,13 +8,9 @@ services:
   backend:
     build: 
       ./backend
-    ports:
-      - ""
     depends_on:
       - bd
   
   bd:
     build:
       ./bd
-    ports:
-      - ""
