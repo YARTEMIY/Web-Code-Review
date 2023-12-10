@@ -95,10 +95,12 @@ def get_product_vseinstrumenti(page):
 
         flag = True
         for name in model.values():
-            if title.lower().find(name) != -1:
-                model_name = name
-                flag = False
-                break
+            index = title.lower().find(name)
+            if index != -1:
+                if index == len(title) - len(name):
+                    model_name = name
+                    flag = False
+                    break
         if flag:
             add_model_item(title.lower())
             model_name = model[max(model.keys())]
