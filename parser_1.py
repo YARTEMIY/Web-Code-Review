@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 from selenium import webdriver
+#from selenium.webdriver.chrome.options import Options
 import sqlite3
 import time
 import config
@@ -21,6 +22,7 @@ def add_model_item(name):
 
 def get_product_instrumentorugie(page):
     driver = webdriver.Chrome()
+
     driver.get(f'https://instrument-orugie.ru/catalog/elektroinstrument/shurupoverti/akkumulyatornye_shurupoverty/?PAGEN_1={page}')
     driver.implicitly_wait(10)
     html = driver.execute_script('return document.body.innerHTML')
@@ -35,12 +37,9 @@ def get_product_instrumentorugie(page):
         title = i.find('div', {'class' : 'item-title'}).text.strip()
 
         try:
-            price = i.find('span', {'class' : 'price_value'}).text.strip()
+            price = i.find('span', {'class' : 'price_value'}).text.strip().replace(' ', '')
         except Exception:
             price = -1
-        else:
-            price = i.find('span', {'class' : 'price_value'}).text.strip()
-            price = price.replace(' ', '')
 
         amount = i.find('span', {'class' : 'value'}).text.strip()
 
@@ -61,8 +60,9 @@ def get_product_instrumentorugie(page):
 
 def get_product_vseinstrumenti(page):
     driver = webdriver.Chrome()
+
     driver.get(f'https://www.vseinstrumenti.ru/category/akkumulyatornye-dreli-shurupoverty-15/page{page}/')
-    time.sleep(15)
+    time.sleep(10)
     driver.implicitly_wait(10)
     html = driver.execute_script('return document.body.innerHTML')
     driver.close()

@@ -50,10 +50,10 @@ def search():
     return render_template('search.html')
 
 
-@app.route('/update_db', methods=['POST'])
-def update_db():
-    parsing()
-    return redirect(url_for('show_data'))
+#@app.route('/update_db', methods=['POST'])
+#def update_db():
+#    parsing()
+#    return redirect(url_for('show_data'))
 
 
 if __name__ == '__main__':
