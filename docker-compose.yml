@@ -1,16 +1,6 @@
+version: '3'
 services:
-  parser:
-    build:
-      ./parser
-    depends_on:
-      - bd
-    
-  backend:
-    build:
-      ./backend
-    depends_on:
-      - bd
-
-  bd:
-    build:
-      ./bd
+  app:
+    build: .
+    ports:
+      - "5000:5000"

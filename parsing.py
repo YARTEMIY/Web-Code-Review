@@ -1,8 +1,8 @@
 from bs4 import BeautifulSoup
 from selenium import webdriver
 import sqlite3
-import os
-import fuzzywuzzy
+import time
+import config
 
 
 model = {0: 'insert your text'}
@@ -60,6 +60,7 @@ def get_product_instrumentorugie(page):
 def get_product_vseinstrumenti(page):
     driver = webdriver.Chrome()
     driver.get(f'https://www.vseinstrumenti.ru/category/akkumulyatornye-dreli-shurupoverty-15/page{page}/')
+    time.sleep(15)
     driver.implicitly_wait(10)
     html = driver.execute_script('return document.body.innerHTML')
     driver.close()
@@ -130,7 +131,7 @@ def create_tables(cur, conn):
 
 
 def add_goods(title, price, amount, link, model_name):
-    conn = sqlite3.connect(f"{os.path.abspath("bd/sqldb.db")}")
+    conn = sqlite3.connect()
 
     cur = conn.cursor()
     cur.execute(f'''INSERT INTO goods (title, price, amount, link, model_name) VALUES 
@@ -147,7 +148,7 @@ def parsing():
     while True:
         page += 1
         all_goods = get_product_instrumentorugie(page)
-        if all_goods == break_point:
+        if all_goods == break_point or len(all_goods) == 0:
             page = 1
             break
 
@@ -155,12 +156,12 @@ def parsing():
     while True:
         page += 1
         all_goods = get_product_vseinstrumenti(page)
-        if all_goods == break_point:
+        if all_goods == break_point or len(all_goods) == 0:
             page = 1
             break
 
 
-with sqlite3.connect(f"{os.path.abspath("bd/sqldb.db")}") as conn:
+with sqlite3.connect(config.dbname) as conn:
     cur = conn.cursor()
     create_tables(cur, conn)
 

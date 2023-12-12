@@ -1,11 +1,11 @@
 from flask import Flask, render_template, request
 import sqlite3
-import os
+import config
 
 app = Flask(__name__)
 
 def connect_db():
-    conn = sqlite3.connect(f"{os.path.abspath('bd/sqldb.db')}")
+    conn = sqlite3.connect(config.dbname)
     return conn
 
 @app.route('/')
@@ -45,4 +45,4 @@ def search():
     return render_template('search.html')
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0')
