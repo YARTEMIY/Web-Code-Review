@@ -1,16 +1,21 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, redirect, url_for
 import sqlite3
 import config
+from parser_1 import parsing
+
 
 app = Flask(__name__)
+
 
 def connect_db():
     conn = sqlite3.connect(config.dbname)
     return conn
 
+
 @app.route('/')
 def show_data():
     return render_template('index.html')
+
 
 @app.route('/search/screwdriver', methods=['GET', 'POST'])
 def search():
@@ -43,6 +48,13 @@ def search():
         return render_template('search.html', data=data)
     
     return render_template('search.html')
+
+
+@app.route('/update_db', methods=['POST'])
+def update_db():
+    parsing()
+    return redirect(url_for('show_data'))
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0')

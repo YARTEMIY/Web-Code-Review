@@ -50,9 +50,11 @@ def get_product_instrumentorugie(page):
 
         add_model_item(model_name)
         
-        all_goods.append((title, price, amount, link))
+        good = (title, price, amount, link, model_name)
 
-        add_goods(title, price, amount, link, model_name)
+        all_goods.append(good)
+
+        add_good(good)
 
     return all_goods
 
@@ -106,9 +108,11 @@ def get_product_vseinstrumenti(page):
             add_model_item(title.lower())
             model_name = model[max(model.keys())]
         
-        all_goods.append((title, price, amount, link))
+        good = (title, price, amount, link, model_name)
 
-        add_goods(title, price, amount, link, model_name)
+        all_goods.append(good)
+
+        add_good(good)
 
     return all_goods
 
@@ -126,22 +130,33 @@ def create_tables(cur, conn):
         model_name TEXT
     )
     ''')
+
+    cur.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_title ON goods(title);')
     
     conn.commit()
 
 
-def add_goods(title, price, amount, link, model_name):
-    conn = sqlite3.connect()
-
+def add_good(good):
+    conn = sqlite3.connect(config.dbname)
     cur = conn.cursor()
-    cur.execute(f'''INSERT INTO goods (title, price, amount, link, model_name) VALUES 
-                ('{title}', '{price}', '{amount}', '{link}', '{model_name}')''')
+    title, price, amount, link, model_name = good
+    cur.execute("""
+    INSERT INTO goods (title, price, amount, link, model_name)
+    VALUES (?, ?, ?, ?, ?)
+    ON CONFLICT(title) DO UPDATE SET 
+        price=excluded.price, 
+        amount=excluded.amount;
+    """, (title, price, amount, link, model_name))
     
     conn.commit()
     conn.close()
 
 
 def parsing():
+    with sqlite3.connect(config.dbname) as conn:
+        cur = conn.cursor()
+        create_tables(cur, conn)
+
     page = 1
 
     break_point = get_product_instrumentorugie(page)
@@ -159,10 +174,3 @@ def parsing():
         if all_goods == break_point or len(all_goods) == 0:
             page = 1
             break
-
-
-with sqlite3.connect(config.dbname) as conn:
-    cur = conn.cursor()
-    create_tables(cur, conn)
-
-parsing()
