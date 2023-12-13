@@ -1,7 +1,7 @@
-from flask import Flask, render_template, request, redirect, url_for
+from flask import Flask, render_template, request
 import sqlite3
 import config
-from parser_1 import parsing
+from database import check_checkbox
 
 
 app = Flask(__name__)
@@ -27,33 +27,14 @@ def search():
         
         conn = connect_db()
         cursor = conn.cursor()
+
+        cur = check_checkbox(min_price, max_price, availability, unique_models, cursor)
         
-        if unique_models:
-            extra_query = "GROUP BY model_name HAVING MIN(price)"
-        else:
-            extra_query = ""
-        
-        if availability:
-            query = (f'SELECT * FROM goods WHERE price >= ? AND price <= ? '
-                     f'AND amount != "Нет в наличии" {extra_query} '
-                     'ORDER BY price ASC')
-            cursor.execute(query, (min_price, max_price))
-        else:
-            query = (f'SELECT * FROM goods WHERE price >= ? AND price <= ? '
-                     f'{extra_query} ORDER BY price ASC')
-            cursor.execute(query, (min_price, max_price))
-        
-        data = cursor.fetchall()
+        data = cur.fetchall()
         conn.close()
         return render_template('search.html', data=data)
     
     return render_template('search.html')
-
-
-#@app.route('/update_db', methods=['POST'])
-#def update_db():
-#    parsing()
-#    return redirect(url_for('show_data'))
 
 
 if __name__ == '__main__':

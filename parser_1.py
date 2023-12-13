@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 from selenium import webdriver
-#from selenium.webdriver.chrome.options import Options
+from database import add_good, create_tables
 import sqlite3
 import time
 import config
@@ -33,15 +33,15 @@ def get_product_instrumentorugie(page):
     bsObj = BeautifulSoup(html, 'html.parser')
     found_goods = bsObj.find_all('div', {'class' : 'catalog_item_wrapp item'})
 
-    for i in found_goods:
-        title = i.find('div', {'class' : 'item-title'}).text.strip()
+    for catalog_item in found_goods:
+        title = catalog_item.find('div', {'class' : 'item-title'}).text.strip()
 
         try:
-            price = i.find('span', {'class' : 'price_value'}).text.strip().replace(' ', '')
+            price = catalog_item.find('span', {'class' : 'price_value'}).text.strip().replace(' ', '')
         except Exception:
             price = -1
 
-        amount = i.find('span', {'class' : 'value'}).text.strip()
+        amount = catalog_item.find('span', {'class' : 'value'}).text.strip()
 
         link = f'https://instrument-orugie.ru/catalog/?q={title}&s=Найти'
 
@@ -72,25 +72,25 @@ def get_product_vseinstrumenti(page):
     bsObj = BeautifulSoup(html, 'html.parser')
     found_goods = bsObj.find_all('div', {'class' : 'dGMJLz fSNq2j Ppy5qY LXySrk'})
 
-    for i in found_goods:
-        title = i.find('span', {'class' : 'typography text v2 -no-margin'}).text.strip()
+    for catalog_item in found_goods:
+        title = catalog_item.find('span', {'class' : 'typography text v2 -no-margin'}).text.strip()
 
         try:
-            price = i.find('p', {'class' : 'typography heading v5 -no-margin R34yPj ACNQm3'}).text.strip()
+            price = catalog_item.find('p', {'class' : 'typography heading v5 -no-margin R34yPj ACNQm3'}).text.strip()
         except Exception:
             price = -1
         else:
-            price = i.find('p', {'class' : 'typography heading v5 -no-margin R34yPj ACNQm3'}).text.strip()
+            price = catalog_item.find('p', {'class' : 'typography heading v5 -no-margin R34yPj ACNQm3'}).text.strip()
             price = price.replace(' ', '')
             price = price.replace('\xa0', '')
             price = price[:-2]
 
         try:
-            amount = i.find('p', {'class' : 'SyU0Xg'}).text.strip()
+            amount = catalog_item.find('p', {'class' : 'SyU0Xg'}).text.strip()
         except Exception:
             amount = 'Нет в наличии'
         else:
-            amount = i.find('p', {'class' : 'SyU0Xg'}).text.strip()
+            amount = catalog_item.find('p', {'class' : 'SyU0Xg'}).text.strip()
             amount = amount.replace('\n', '')
             amount = amount.replace('    ', ' ')
 
@@ -117,39 +117,15 @@ def get_product_vseinstrumenti(page):
     return all_goods
 
 
-def create_tables(cur, conn):
-    cur.execute('DROP TABLE IF EXISTS goods')
-    
-    cur.execute(''' 
-    CREATE TABLE goods (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        title TEXT,
-        price INTEGER,
-        amount TEXT,
-        link TEXT,
-        model_name TEXT
-    )
-    ''')
+def iterate_through_pages(website):
+    page = 1
 
-    cur.execute('CREATE UNIQUE INDEX IF NOT EXISTS idx_title ON goods(title);')
-    
-    conn.commit()
-
-
-def add_good(good):
-    conn = sqlite3.connect(config.dbname)
-    cur = conn.cursor()
-    title, price, amount, link, model_name = good
-    cur.execute("""
-    INSERT INTO goods (title, price, amount, link, model_name)
-    VALUES (?, ?, ?, ?, ?)
-    ON CONFLICT(title) DO UPDATE SET 
-        price=excluded.price, 
-        amount=excluded.amount;
-    """, (title, price, amount, link, model_name))
-    
-    conn.commit()
-    conn.close()
+    break_point = website(page)
+    while True:
+        page += 1
+        all_goods = website(page)
+        if all_goods == break_point or len(all_goods) == 0:
+            break
 
 
 def parsing():
@@ -157,20 +133,5 @@ def parsing():
         cur = conn.cursor()
         create_tables(cur, conn)
 
-    page = 1
-
-    break_point = get_product_instrumentorugie(page)
-    while True:
-        page += 1
-        all_goods = get_product_instrumentorugie(page)
-        if all_goods == break_point or len(all_goods) == 0:
-            page = 1
-            break
-
-    break_point = get_product_vseinstrumenti(page)
-    while True:
-        page += 1
-        all_goods = get_product_vseinstrumenti(page)
-        if all_goods == break_point or len(all_goods) == 0:
-            page = 1
-            break
+    iterate_through_pages(get_product_instrumentorugie)
+    iterate_through_pages(get_product_vseinstrumenti)
